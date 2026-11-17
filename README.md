@@ -1,5 +1,7 @@
 # JEI Fast Start
 
+<img src="icon.png" width="96" alt="JEI Fast Start icon">
+
 A small client-side Forge mod for Minecraft 1.20.1 that shortens the freeze when you join a
 world in packs with very large recipe sets (GregTech-scale packs such as All the Mods 9 Expert).
 
@@ -10,11 +12,11 @@ The mod only removes wasted work during JEI's startup.
 
 All the Mods 9 Expert, 349 mods, 81,743 JEI ingredients, joining a dedicated server:
 
-| | Without the mod (4 joins) | With the mod (2 joins) |
+| | Without the mod (4 joins) | With the mod (3 joins) |
 |---|---|---|
-| Connect to playable | 105 to 142 s | 65 and 66 s |
-| JEI startup (`Starting JEI took`) | 95 to 127 s | 54 and 55 s |
-| `Registering recipes: jei:minecraft` | 56 and 70 s | 17 and 18 s |
+| Connect to playable | 105 to 142 s | 58 to 66 s |
+| JEI startup (`Starting JEI took`) | 95 to 127 s | 46 to 55 s |
+| `Registering recipes: jei:minecraft` | 56 and 70 s | 15 to 18 s |
 | `Sending Runtime: kubejs:jei` | 3 to 9 s | under 0.1 s |
 
 One machine, one pack. Smaller packs have less of this work to remove and will gain less.
