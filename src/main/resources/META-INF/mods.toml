@@ -1,0 +1,40 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+issueTrackerURL="https://github.com/FallenPumpking/jei-fast-start/issues"
+
+[[mods]]
+modId="jeifast"
+version="1.0.0"
+displayName="JEI Fast Start"
+authors="FallenPumpKing"
+displayURL="https://github.com/FallenPumpking/jei-fast-start"
+description='''
+Shortens the JEI freeze when joining a world in packs with very large recipe sets.
+
+JEI stays synchronous and shows exactly what it showed before; this only removes repeated item stack rebuilding during JEI startup, and a slow path in KubeJS item hiding when KubeJS is installed.
+
+Client-side only. Not needed on servers.
+'''
+displayTest="IGNORE_ALL_VERSION"
+
+[[dependencies.jeifast]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.jeifast]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.jeifast]]
+modId="jei"
+mandatory=true
+versionRange="[15.59,16)"
+ordering="AFTER"
+side="CLIENT"

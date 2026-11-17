@@ -1,0 +1,14 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "dev.fallen.jeifast.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "TypedItemStackMixin",
+    "JeiStarterMixin",
+    "KubeJsHideEventMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}
