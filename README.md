@@ -38,16 +38,20 @@ The full analysis, with profiles, is in [docs/ANALYSIS.md](docs/ANALYSIS.md).
 ## Requirements
 
 - Minecraft 1.20.1, Forge 47.x
-- JEI 15.59.x
+- JEI 15.x. Tested in game on 15.59.0.210 and 15.74.0.234.
 - Client only. It does nothing on a dedicated server and is not needed there.
 
 ## Compatibility and limits
 
-- The mod hooks JEI internals. If a JEI update changes them, the hooks are skipped, a warning
-  is logged, and JEI runs unmodified. It should not crash the game in that case.
+- The mod hooks JEI internals with bytecode mixins. Before patching a class it checks that
+  every member it needs is present; if not, it logs a warning and leaves that class unmodified.
+- That check cannot rule out every way a JEI update could break a hook. Version 1.0.0 crashed
+  on JEI 15.74 because one hook read a method argument after JEI had reused its local slot.
+  Since 1.0.1, arguments are only read at method entry, where that cannot happen. Each release
+  is tested in game against the JEI versions listed above.
 - During JEI startup, JEI sees the original recipe stack for up to one second instead of a
-  copy. A mod that changes a stack right after registering it with JEI could be affected. None
-  was seen in All the Mods 9 Expert.
+  copy. At the start of each JEI load the mod compares the first 512 reused stacks with what
+  JEI itself would build, and turns reuse off for the session if any differ.
 - Not tested together with async JEI loaders such as Just Enough Threads.
 - Tested on All the Mods 9 Expert only.
 
@@ -59,16 +63,16 @@ JEI start finished in 54.9 s; item stack cache: 15162149 reused from source, 158
 
 ## Building
 
-The build uses plain `javac`, no Gradle. You need a JDK 17 or newer, the JEI 15.59 jar, and
-the `libraries` folder of a Forge 1.20.1 (47.x) install.
+The build uses plain `javac`, no Gradle. You need a JDK 17 or newer and the `libraries` folder
+of a Forge 1.20.1 (47.x) install. No JEI or KubeJS jar is needed to compile.
 
 ```bash
-JEI_JAR=/path/to/jei-1.20.1-forge-15.59.0.210.jar MC_LIBS=/path/to/libraries bash build.sh
+MC_LIBS=/path/to/libraries bash build.sh
 ```
 
 The jar is written to `build/libs/`. Set `FORGE_VERSION` if your libraries folder has a Forge
 version other than 47.4.10. The jar runs on a normal Forge install; it does not run in a
-Mojang-mapped development environment because it calls one Minecraft method by its SRG name.
+Mojang-mapped development environment because it calls Minecraft methods by their SRG names.
 
 ## License
 

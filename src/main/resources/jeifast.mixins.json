@@ -2,6 +2,7 @@
   "required": false,
   "minVersion": "0.8",
   "package": "dev.fallen.jeifast.mixin",
+  "plugin": "dev.fallen.jeifast.JeiFastMixinPlugin",
   "compatibilityLevel": "JAVA_17",
   "client": [
     "TypedItemStackMixin",

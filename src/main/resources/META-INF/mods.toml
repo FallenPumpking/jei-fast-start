@@ -5,7 +5,7 @@ issueTrackerURL="https://github.com/FallenPumpking/jei-fast-start/issues"
 
 [[mods]]
 modId="jeifast"
-version="1.0.0"
+version="1.0.1"
 displayName="JEI Fast Start"
 authors="FallenPumpKing"
 displayURL="https://github.com/FallenPumpking/jei-fast-start"
@@ -34,7 +34,7 @@ side="BOTH"
 
 [[dependencies.jeifast]]
 modId="jei"
-mandatory=true
-versionRange="[15.59,16)"
+mandatory=false
+versionRange="[15,16)"
 ordering="AFTER"
 side="CLIENT"

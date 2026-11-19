@@ -151,3 +151,26 @@ index build (tooltip text for every ingredient), 7% is Just Enough Resources cat
 `TypedItemStackMixin`, `JeiStarterMixin`, `KubeJsHideEventMixin`. The mixin config is
 `required: false` with `defaultRequire: 0`, so if a target changes the hook is skipped and JEI runs unmodified. It is tied
 to JEI 15.59 internals.
+
+## Postmortem: 1.0.0 crashed on JEI 15.74
+
+1.0.0 injected into `TypedItemStack.create(ItemStack)` at `RETURN` with a handler that took the
+`ItemStack` argument. Mixin loads captured arguments from their local slots at the injection
+point. In JEI 15.74.0.234 the `FullTypedItemStack` branch of that method stores a
+`Holder<Item>` into slot 0 (`astore_0`) before returning, so the injected `aload_0` passed a
+`Holder` where an `ItemStack` was declared and the JVM rejected the class with a `VerifyError`
+the first time `create` ran. The method's signature was unchanged, so nothing that checks
+names and descriptors could have caught it. Thanks to the All the Mods team for the diagnosis.
+
+Changes in 1.0.1:
+
+- The argument is captured by an injection at `HEAD`; the `RETURN` injection takes no
+  arguments and pairs the result with the remembered source.
+- The `@Redirect` on the first `copyTag` call in `create` was removed. It depended on the
+  order of calls inside the method body.
+- A mixin config plugin reads each target class and only allows a mixin when the members it
+  needs exist.
+- The first 512 reused source stacks of each JEI start are compared with JEI's own rebuild;
+  a mismatch turns reuse off.
+- The JEI dependency is optional and accepts any 15.x; targets are named as strings, including
+  the package JEI used around 15.20, which was not tested in game.

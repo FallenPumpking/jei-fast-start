@@ -81,3 +81,26 @@ Same fixes as 0.2.0, with optional (fail-soft) injections and a periodic table s
 Counter: 15,162,229 stacks reused from their source, 15,714,308 cache hits, 2,022,635 rebuilt.
 Every phase was a little faster in this join than in the 0.2.0 joins, including phases the mod
 does not touch, so treat the difference from 0.2.0 as run-to-run variation.
+
+## Release build 1.0.1 (fix for the JEI 15.74 crash)
+
+1.0.0 crashed the client with a `VerifyError` on JEI 15.74.0.234 (see ANALYSIS.md). 1.0.1 was
+tested on both JEI versions, Nov 18:
+
+| Test | JEI | Result | JEI start | `jei:minecraft` recipes |
+|---|---|---|---|---|
+| Single-player world | 15.74.0.234 | started, no crash | 33.3 s | 7.0 s |
+| Server join after a fresh launch | 15.59.0.210 | clean | 44.7 s | 16.8 s |
+| Second join, same launch | 15.59.0.210 | clean | 50.2 s | 27.3 s |
+| Control: server join without the mod | 15.59.0.210 | clean | 85.4 s | 48.8 s |
+
+The single-player figure is not comparable with the server joins (different JEI version and
+world). On the second join in the same launch JEI created about 41 million typed ingredients
+instead of about 15 million; whether JEI also does that extra work without the mod was not
+measured.
+
+One earlier launch with 1.0.1 was disconnected twice by the server 6 to 10 seconds after login
+with a Cyclops Core `PacketCodecException` while decoding EvilCraft's
+`UpdateSoulNetworkCachePacket`. That happened before JEI started, the stack trace contains no
+JEI or jeifast frames, and it did not recur on the next launch with the same jar. Its cause is
+not known.

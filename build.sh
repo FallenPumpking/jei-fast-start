@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
 # Builds jeifast with plain javac (JDK 17+), no Gradle.
 #
-# The mixins target JEI's own (unobfuscated) classes, so no refmap is needed, and the one
-# Minecraft method used is called by its SRG name. The jar therefore runs on a normal Forge
-# 1.20.1 install but not in a Mojang-mapped dev environment.
+# The mixins name their JEI and KubeJS targets as strings, so neither jar is needed to compile
+# and no refmap is needed; the few Minecraft methods used are called by SRG name. The jar
+# therefore runs on a normal Forge 1.20.1 install but not in a Mojang-mapped dev environment.
 #
 # Required environment:
-#   JEI_JAR   path to jei-1.20.1-forge-15.59.x.jar
 #   MC_LIBS   a Forge 1.20.1 (47.x) libraries folder, e.g. <launcher>/libraries
 # Optional:
 #   FORGE_VERSION (default 47.4.10), JAVA_HOME (default: javac and jar from PATH)
 set -euo pipefail
 cd "$(dirname "$0")"
-VERSION=1.0.0
-: "${JEI_JAR:?set JEI_JAR to the JEI 15.59 jar}"
+VERSION=1.0.1
 : "${MC_LIBS:?set MC_LIBS to a Forge 1.20.1 libraries folder}"
 FORGE_VERSION="${FORGE_VERSION:-47.4.10}"
 BIN=""
@@ -21,15 +19,17 @@ if [ -n "${JAVA_HOME:-}" ]; then BIN="$JAVA_HOME/bin/"; fi
 SEP=":"
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) SEP=";" ;; esac
 
-CP="$JEI_JAR"
+CP=""
 for lib in \
   "net/minecraft/client/1.20.1-20230612.114412/client-1.20.1-20230612.114412-srg.jar" \
   "org/spongepowered/mixin/0.8.5/mixin-0.8.5.jar" \
+  "org/ow2/asm/asm/9.6/asm-9.6.jar" \
+  "org/ow2/asm/asm-tree/9.6/asm-tree-9.6.jar" \
   "net/minecraftforge/javafmllanguage/1.20.1-$FORGE_VERSION/javafmllanguage-1.20.1-$FORGE_VERSION.jar" \
   "net/minecraftforge/fmlcore/1.20.1-$FORGE_VERSION/fmlcore-1.20.1-$FORGE_VERSION.jar" \
   "org/apache/logging/log4j/log4j-api/2.19.0/log4j-api-2.19.0.jar"; do
   [ -f "$MC_LIBS/$lib" ] || { echo "missing $MC_LIBS/$lib" >&2; exit 1; }
-  CP="$CP$SEP$MC_LIBS/$lib"
+  CP="${CP:+$CP$SEP}$MC_LIBS/$lib"
 done
 
 OUT=build

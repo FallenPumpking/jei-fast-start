@@ -1,18 +1,27 @@
 package dev.fallen.jeifast.mixin;
 
 import dev.fallen.jeifast.FastStackCache;
-import mezz.jei.api.ingredients.ITypedIngredient;
-import mezz.jei.common.ingredients.itemStacks.TypedItemStack;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = TypedItemStack.class, remap = false)
+/**
+ * Hooks JEI's TypedItemStack. JEI moved the class between packages during 15.x, so both names
+ * are listed; JeiFastMixinPlugin only lets this apply when the members it needs are present.
+ *
+ * Rule for every injector here: method arguments are only captured at HEAD. At any later point
+ * the compiler may have reused an argument's local slot for something else (JEI 15.74 does this
+ * in create), and loading it there produces a VerifyError.
+ */
+@Mixin(
+    targets = {
+        "mezz.jei.common.ingredients.itemStacks.TypedItemStack",
+        "mezz.jei.library.ingredients.itemStacks.TypedItemStack"
+    },
+    remap = false)
 public abstract class TypedItemStackMixin {
     @Shadow
     protected abstract ItemStack createItemStackUncached();
@@ -20,32 +29,34 @@ public abstract class TypedItemStackMixin {
     /** Serve getIngredient() from the fast table instead of the Guava cache. */
     @Inject(method = "getIngredient()Lnet/minecraft/world/item/ItemStack;", at = @At("HEAD"), cancellable = true)
     private void jeifast$getIngredient(CallbackInfoReturnable<ItemStack> cir) {
-        ItemStack stack = FastStackCache.lookup(this);
-        if (stack == null) {
+        FastStackCache.Entry entry = FastStackCache.find(this);
+        ItemStack stack;
+        if (entry == null) {
             stack = this.createItemStackUncached();
             FastStackCache.store(this, stack);
+        } else {
+            stack = entry.stack();
+            if (FastStackCache.shouldVerify(entry)) {
+                ItemStack rebuilt = this.createItemStackUncached();
+                if (!FastStackCache.sameStack(stack, rebuilt)) {
+                    FastStackCache.primingMismatch(stack, rebuilt);
+                    FastStackCache.store(this, rebuilt);
+                    stack = rebuilt;
+                }
+            }
         }
         cir.setReturnValue(stack);
     }
 
-    /** During JEI startup, remember the source stack so it is not rebuilt right away. */
-    @Inject(method = "create(Lnet/minecraft/world/item/ItemStack;)Lmezz/jei/api/ingredients/ITypedIngredient;", at = @At("RETURN"))
-    private static void jeifast$prime(ItemStack source, CallbackInfoReturnable<ITypedIngredient<ItemStack>> cir) {
-        // m_41613_ = ItemStack.getCount (SRG name; this mod is compiled without remapping)
-        if (source.m_41613_() == 1) {
-            FastStackCache.prime(cir.getReturnValue(), source);
-        }
+    /** Remember the source stack while it is still in its argument slot. */
+    @Inject(method = "create(Lnet/minecraft/world/item/ItemStack;)Lmezz/jei/api/ingredients/ITypedIngredient;", at = @At("HEAD"))
+    private static void jeifast$createHead(ItemStack source, CallbackInfoReturnable<Object> cir) {
+        FastStackCache.createBegin(source);
     }
 
-    /**
-     * create(ItemStack) copies the tag and then NormalizedTypedItemStack's constructor copies it
-     * again. Drop the first copy on the count == 1 path.
-     */
-    @Redirect(
-        method = "create(Lnet/minecraft/world/item/ItemStack;)Lmezz/jei/api/ingredients/ITypedIngredient;",
-        at = @At(value = "INVOKE", ordinal = 0,
-            target = "Lmezz/jei/common/ingredients/itemStacks/TypedItemStack;copyTag(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/nbt/CompoundTag;"))
-    private static CompoundTag jeifast$skipDoubleCopy(CompoundTag tag) {
-        return tag;
+    /** Pair the new ingredient with the remembered source. Takes no arguments on purpose. */
+    @Inject(method = "create(Lnet/minecraft/world/item/ItemStack;)Lmezz/jei/api/ingredients/ITypedIngredient;", at = @At("RETURN"))
+    private static void jeifast$createReturn(CallbackInfoReturnable<Object> cir) {
+        FastStackCache.createEnd(cir.getReturnValue());
     }
 }
