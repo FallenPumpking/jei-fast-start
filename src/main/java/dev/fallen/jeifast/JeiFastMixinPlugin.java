@@ -59,7 +59,10 @@ public final class JeiFastMixinPlugin implements IMixinConfigPlugin {
             return null;
         }
         if (mixinClassName.endsWith(".JeiStarterMixin")) {
-            return hasMethod(target, "start", "()V", false) ? null : "no start()";
+            if (!hasMethod(target, "start", "()V", false)) {
+                return "no start()";
+            }
+            return hasMethod(target, "stop", "()V", false) ? null : "no stop()";
         }
         if (mixinClassName.endsWith(".KubeJsHideEventMixin")) {
             return hasField(target, "allIngredients", "Ljava/util/Collection;") ? null : "no allIngredients field";

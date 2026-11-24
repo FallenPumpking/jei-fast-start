@@ -52,7 +52,9 @@ The full analysis, with profiles, is in [docs/ANALYSIS.md](docs/ANALYSIS.md).
 - During JEI startup, JEI sees the original recipe stack for up to one second instead of a
   copy. At the start of each JEI load the mod compares the first 512 reused stacks with what
   JEI itself would build, and turns reuse off for the session if any differ.
-- Not tested together with async JEI loaders such as Just Enough Threads.
+- Works alongside Just Enough Threads with its async startup: the startup tracking follows JEI
+  onto JET's background thread. Any JEI plugin call that JET moves to the client thread still
+  uses the faster cache, but not source stack reuse.
 - Tested on All the Mods 9 Expert only.
 
 After JEI finishes loading, the log shows a line like:

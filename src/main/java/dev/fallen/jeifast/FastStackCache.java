@@ -153,7 +153,9 @@ public final class FastStackCache {
     }
 
     public static void startEnd() {
-        if (startThread == null) {
+        // Only the thread that began the tracked start may end it: a superseded start finishing
+        // late on another thread must not end the current one.
+        if (!onStartThread()) {
             return;
         }
         startThread = null;
@@ -167,5 +169,20 @@ public final class FastStackCache {
             LOG.info("JEI start finished in {} s; item stack cache: {} reused from source, {} hits, {} rebuilt",
                 seconds, primed, hits, misses);
         }
+    }
+
+    /**
+     * JEI is stopping. If a start is still marked as running, it was aborted before RETURN (or is
+     * being cancelled on another thread right now): stop reusing source stacks for it and drop
+     * the cached stacks.
+     */
+    public static void startAbort() {
+        if (startThread == null) {
+            return;
+        }
+        startThread = null;
+        pendingSource = null;
+        Arrays.fill(TABLE, null);
+        LOG.info("JEI stopped before its start finished; item stack reuse for that start is off");
     }
 }
